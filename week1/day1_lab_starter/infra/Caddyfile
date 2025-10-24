@@ -1,0 +1,26 @@
+:80 {
+
+  encode zstd gzip
+
+  handle_path /grafana* {
+    reverse_proxy grafana:3000
+  }
+
+  handle_path /dvwa* {
+    reverse_proxy dvwa:80
+  }
+
+  handle_path /api* {
+    reverse_proxy vulnapi:3000
+  }
+
+  handle_path /auth* {
+    reverse_proxy keycloak:8080
+  }
+
+  handle /health {
+    respond "ok" 200
+  }
+
+  log
+}

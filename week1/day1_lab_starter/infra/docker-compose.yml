@@ -1,0 +1,158 @@
+name: day1-lab
+
+networks:
+  lab-net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.30.0.0/16
+
+volumes:
+  grafana-data:
+  postgres-data:
+
+services:
+  reverse-proxy:
+    image: caddy:2.8.4
+    container_name: reverse-proxy
+    ports:
+      - "${REVERSE_PROXY_PORT:-80}:80"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+    depends_on:
+      - grafana
+      - dvwa
+      - vulnapi
+      - keycloak
+    healthcheck:
+      test: ["CMD", "wget", "-qO", "-", "http://localhost/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+    networks:
+      lab-net:
+        ipv4_address: 172.30.0.10
+
+  dvwa:
+    image: vulnerables/web-dvwa:latest
+    container_name: dvwa
+    networks: [lab-net]
+    ports:
+      - "${DVWA_PORT:-8081}:80"
+    healthcheck:
+      test: ["CMD", "wget", "-qO", "-", "http://localhost/login.php"]
+      interval: 20s
+      timeout: 5s
+      retries: 10
+
+  vulnapi:
+    build:
+      context: ./vulnapi
+    container_name: vulnapi
+    networks: [lab-net]
+    ports:
+      - "${VULNAPI_PORT:-8082}:3000"
+    healthcheck:
+      test: ["CMD", "wget", "-qO", "-", "http://localhost:3000"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+
+  postgres:
+    image: postgres:16.3
+    container_name: postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    networks: [lab-net]
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.0.2
+    container_name: keycloak
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN}
+      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
+    command:
+      - start
+      - --http-port=8080
+      - --hostname-strict=false
+      - --db=postgres
+      - --db-url=jdbc:postgresql://postgres:5432/${POSTGRES_DB}
+      - --db-username=${POSTGRES_USER}
+      - --db-password=${POSTGRES_PASSWORD}
+    networks: [lab-net]
+    ports:
+      - "${KEYCLOAK_HTTP_PORT:-8083}:8080"
+    healthcheck:
+      test: ["CMD", "wget", "-qO", "-", "http://localhost:8080/health"]
+      interval: 20s
+      timeout: 5s
+      retries: 20
+
+  loki:
+    image: grafana/loki:2.9.8
+    command: ["-config.file=/etc/loki/config.yml"]
+    ports:
+      - "3100:3100"
+    healthcheck:
+      test: ["CMD", "wget", "-qO", "-", "http://localhost:3100/ready"]
+      interval: 10s
+      timeout: 3s
+      retries: 20
+    volumes:
+      - ./loki/config.yml:/etc/loki/config.yml:ro
+      - ./loki/data:/loki            # ← add this line
+
+  promtail:
+    image: grafana/promtail:2.9.8
+    container_name: promtail
+    depends_on:
+      loki:
+        condition: service_healthy
+    networks: [lab-net]
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./promtail/promtail.yml:/etc/promtail/promtail.yml:ro
+    command: ["--config.file=/etc/promtail/promtail.yml"]
+
+  grafana:
+    image: grafana/grafana:11.2.0
+    container_name: grafana
+    depends_on:
+      loki:
+        condition: service_healthy
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GF_SECURITY_ADMIN_USER}
+      GF_SECURITY_ADMIN_PASSWORD: ${GF_SECURITY_ADMIN_PASSWORD}
+      GF_INSTALL_PLUGINS: grafana-piechart-panel
+    networks: [lab-net]
+    ports:
+      - "${GRAFANA_PORT:-3000}:3000"
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
+      - ./grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards
+      - ./grafana/dashboards:/var/lib/grafana/dashboards
+
+  zeek:
+    image: zeek/zeek:6.2.0
+    container_name: zeek
+    network_mode: host
+    cap_add:
+      - NET_RAW
+      - NET_ADMIN
+    environment:
+      - ZEEK_IFACE=${ZEEK_IFACE:-any}
+    entrypoint: ["/bin/sh", "-c", "echo 'Starting Zeek on $ZEEK_IFACE'; zeek -i $ZEEK_IFACE || sleep 3600"]
+    restart: unless-stopped

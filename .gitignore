@@ -1,11 +1,25 @@
-# OS & editor
+# --- Secrets (never commit) ---
+.env
+*.env
+!.env.example
+
+# --- Logs & temp ---
+*.log
+*.tmp
+*.swp
+*~
+*.bak
+
+# --- OS / editor junk ---
 .DS_Store
 Thumbs.db
 .vscode/
 .idea/
 
-# Python / build artifacts
-__pycache__/
-*.pyc
-dist/
-build/
+# --- Docker bind data (if any) ---
+infra/grafana/data/
+week*/**/infra/grafana/data/
+
+# --- Archives ---
+*.zip
+.env

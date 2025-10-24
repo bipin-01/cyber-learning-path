@@ -1,0 +1,11 @@
+{
+  "users": [
+    {"id": 1, "username": "admin", "role": "admin"},
+    {"id": 2, "username": "alice", "role": "user"},
+    {"id": 3, "username": "bob", "role": "user"}
+  ],
+  "secrets": [
+    {"id": 1, "name": "apiKey", "value": "hardcoded-key-123"},
+    {"id": 2, "name": "jwtSecret", "value": "dev-jwt-secret"}
+  ]
+}
