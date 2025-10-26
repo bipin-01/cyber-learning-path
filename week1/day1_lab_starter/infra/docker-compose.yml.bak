@@ -5,7 +5,7 @@ networks:
     driver: bridge
     ipam:
       config:
-        - subnet: 172.30.0.0/16
+        - subnet: 172.18.0.0/16
 
 volumes:
   grafana-data:
@@ -31,7 +31,7 @@ services:
       retries: 10
     networks:
       lab-net:
-        ipv4_address: 172.30.0.10
+        ipv4_address: 172.18.0.10
 
   dvwa:
     image: vulnerables/web-dvwa:latest
@@ -40,7 +40,7 @@ services:
     ports:
       - "${DVWA_PORT:-8081}:80"
     healthcheck:
-      test: ["CMD", "php", "-r", "exit(@fsockopen('localhost',80)?0:1);"]
+      test: ["CMD", "wget", "-qO", "-", "http://localhost/login.php"]
       interval: 20s
       timeout: 5s
       retries: 10
@@ -53,7 +53,7 @@ services:
     ports:
       - "${VULNAPI_PORT:-8082}:3000"
     healthcheck:
-      test: ["CMD", "curl", "-sf", "http://localhost:3000"]
+      test: ["CMD", "wget", "-qO", "-", "http://localhost:3000"]
       interval: 10s
       timeout: 3s
       retries: 10
@@ -76,82 +76,56 @@ services:
 
   keycloak:
     image: quay.io/keycloak/keycloak:26.0.2
+    container_name: keycloak
     depends_on:
       postgres:
         condition: service_healthy
-    networks: [lab-net] 
+    environment:
+      KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN}
+      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
     command:
-      - start-dev
+      - start
       - --http-port=8080
       - --hostname-strict=false
-    environment:
-      KC_DB: postgres
-      KC_DB_URL_HOST: postgres
-      KC_DB_URL_PORT: "5432"
-      KC_DB_URL_DATABASE: ${POSTGRES_DB}
-      KC_DB_USERNAME: ${POSTGRES_USER}
-      KC_DB_PASSWORD: ${POSTGRES_PASSWORD}
-
-      KC_HEALTH_ENABLED: "true"
-      KC_METRICS_ENABLED: "true"
-
-      # ↓ ensure management HTTP (health/metrics) is reachable from outside
-      KC_HTTP_MANAGEMENT_ENABLED: "true"
-      KC_HTTP_MANAGEMENT_HOST: "0.0.0.0"
-      KC_HTTP_MANAGEMENT_PORT: "9000"
+      - --db=postgres
+      - --db-url=jdbc:postgresql://postgres:5432/${POSTGRES_DB}
+      - --db-username=${POSTGRES_USER}
+      - --db-password=${POSTGRES_PASSWORD}
+    networks: [lab-net]
     ports:
       - "${KEYCLOAK_HTTP_PORT:-8083}:8080"
-      - "9000:9000"
     healthcheck:
-      # use /dev/tcp to avoid needing curl/wget in the image
-      test: ["CMD-SHELL", "{ printf 'HEAD /health/ready HTTP/1.0\\r\\n\\r\\n' >&0; grep 'HTTP/1.0 200' ; } 0<>/dev/tcp/localhost/9000"]
-      interval: 10s
+      test: ["CMD", "wget", "-qO", "-", "http://localhost:8080/health"]
+      interval: 20s
       timeout: 5s
-      retries: 30
-
-
+      retries: 20
 
   loki:
     image: grafana/loki:2.9.8
-    container_name: loki              # ← add
-    networks:
-      lab-net:
-        aliases:
-          - loki                      # ← add
+    container_name: loki
     command: ["-config.file=/etc/loki/config.yml"]
-    ports: ["3100:3100"]
+    networks: [lab-net]
+    volumes:
+      - ./loki/config.yml:/etc/loki/config.yml:ro
+    ports:
+      - "3100:3100"
     healthcheck:
       test: ["CMD", "wget", "-qO", "-", "http://localhost:3100/ready"]
       interval: 10s
       timeout: 3s
       retries: 20
-    volumes:
-      - ./loki/config.yml:/etc/loki/config.yml:ro
-      - ./loki/data:/loki
 
-# docker-compose.yml (you're in .../infra, so paths are relative to this folder)
   promtail:
     image: grafana/promtail:2.9.8
     container_name: promtail
+    depends_on:
+      loki:
+        condition: service_healthy
     networks: [lab-net]
-    entrypoint: ["/usr/bin/promtail"]
-    command:
-      - -config.file=/etc/promtail/config.yml
-      - -client.url=http://loki:3100/loki/api/v1/push   # ✅ force a client even if YAML parse glitches
-      - -log.level=info
-    ports:
-      - "9080:9080"   # optional (for /ready and /targets in browser/curl)
     volumes:
-      - /var/lib/docker/containers:/var/lib/docker/containers:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro
-      - ./promtail/config.yml:/etc/promtail/config.yml:ro
-    # keep healthcheck simple & tool-free (no wget/curl in image)
-    healthcheck:
-      test: ["CMD", "/usr/bin/promtail", "-version"]  # just proves the binary runs
-      interval: 30s
-      timeout: 5s
-      retries: 3
-      start_period: 10s
+      - ./promtail/promtail.yml:/etc/promtail/promtail.yml:ro
+    command: ["--config.file=/etc/promtail/promtail.yml"]
 
   grafana:
     image: grafana/grafana:11.2.0
@@ -171,11 +145,6 @@ services:
       - ./grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
       - ./grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards
       - ./grafana/dashboards:/var/lib/grafana/dashboards
-    healthcheck:
-      test: ["CMD", "wget", "-qO", "-", "http://localhost:3000/api/health"]
-      interval: 10s
-      timeout: 3s
-      retries: 10
 
   zeek:
     image: zeek/zeek:6.2.0

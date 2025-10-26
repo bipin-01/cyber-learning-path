@@ -1,26 +1,19 @@
-# --- Secrets (never commit) ---
+# secrets
 .env
 *.env
-!.env.example
 
-# --- Logs & temp ---
-*.log
-*.tmp
-*.swp
-*~
-*.bak
+# docker + loki data
+loki/data/
+promtail/*positions*.yaml
 
-# --- OS / editor junk ---
+# node/npm (vulnapi)
+vulnapi/node_modules/
+npm-debug.log
+package-lock.json
+
+# editor/system
 .DS_Store
-Thumbs.db
-.vscode/
-.idea/
+*.swp
 
-# --- Docker bind data (if any) ---
-infra/grafana/data/
-week*/**/infra/grafana/data/
-
-# --- Archives ---
-*.zip
-.env
-.env
+# nmap temp
+notes/**/nmap-discovery.gnmap

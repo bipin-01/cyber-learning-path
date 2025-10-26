@@ -1,0 +1,45 @@
+server:
+  http_listen_port: 9080
+  grpc_listen_port: 0
+
+positions:
+  filename: /tmp/positions.yaml
+
+clients:
+  - url: http://loki:3100/loki/api/v1/push
+
+scrape_configs:
+  - job_name: docker-logs
+    docker_sd_configs:
+      - host: unix:///var/run/docker.sock
+
+    # ensure every stream has a label
+    relabel_configs:
+      - target_label: job
+        replacement: docker-logs
+
+      # (optional) keep only your compose project; comment out if unsure
+      - source_labels: ['__meta_docker_container_label_com_docker_compose_project']
+        regex: day1-lab
+        action: keep
+
+      # drop the noisy container by ID or name
+      - source_labels: ['__meta_docker_container_id']
+        regex: 633c7ff8fe8abfd2973e8f4f5d23234b188c70af91c0939230fb5724f448b21e
+        action: drop
+
+      # useful labels
+      - source_labels: ['__meta_docker_container_id']
+        target_label: container_id
+      - source_labels: ['__meta_docker_container_name']
+        regex: '/(.*)'
+        target_label: container
+      - source_labels: ['__meta_docker_image']
+        target_label: image
+      - source_labels: ['__meta_docker_container_label_com_docker_compose_service']
+        target_label: service
+
+      # log file path
+      - source_labels: ['__meta_docker_container_id']
+        target_label: __path__
+        replacement: /var/lib/docker/containers/$1/*-json.log
