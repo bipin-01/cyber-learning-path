@@ -1,0 +1,27 @@
+# Nmap 7.95 scan initiated Sun Jan  4 00:54:35 2026 as: /usr/lib/nmap/nmap --privileged -sn -oA notes/week01/day1/nmap-discovery 172.30.0.0/16
+Nmap scan report for 172.30.0.2
+Host is up (0.000038s latency).
+MAC Address: 02:42:AC:1E:00:02 (Unknown)
+Nmap scan report for 172.30.0.3
+Host is up (0.000021s latency).
+MAC Address: 02:42:AC:1E:00:03 (Unknown)
+Nmap scan report for 172.30.0.4
+Host is up (0.000024s latency).
+MAC Address: 02:42:AC:1E:00:04 (Unknown)
+Nmap scan report for 172.30.0.5
+Host is up (0.000016s latency).
+MAC Address: 02:42:AC:1E:00:05 (Unknown)
+Nmap scan report for 172.30.0.6
+Host is up (0.000077s latency).
+MAC Address: 02:42:AC:1E:00:06 (Unknown)
+Nmap scan report for 172.30.0.7
+Host is up (0.000033s latency).
+MAC Address: 02:42:AC:1E:00:07 (Unknown)
+Nmap scan report for 172.30.0.8
+Host is up (0.000030s latency).
+MAC Address: 02:42:AC:1E:00:08 (Unknown)
+Nmap scan report for 172.30.0.10
+Host is up (0.000057s latency).
+MAC Address: 02:42:AC:1E:00:0A (Unknown)
+Nmap scan report for 172.30.0.1
+Host is up.

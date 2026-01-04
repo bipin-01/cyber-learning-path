@@ -1,0 +1,3 @@
+# Nmap 7.95 scan initiated Sun Jan  4 00:56:13 2026 as: /usr/lib/nmap/nmap --privileged -sC -sV -O -T3 -iL notes/week01/day1/targets.txt -oA notes/week01/day1/nmap-services
+WARNING: No targets were specified, so 0 hosts scanned.
+# Nmap done at Sun Jan  4 00:56:14 2026 -- 0 IP addresses (0 hosts up) scanned in 0.34 seconds

@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE nmaprun>
+<?xml-stylesheet href="file:///usr/share/nmap/nmap.xsl" type="text/xsl"?>
+<!-- Nmap 7.95 scan initiated Sun Jan  4 00:54:35 2026 as: /usr/lib/nmap/nmap -&#45;privileged -sn -oA notes/week01/day1/nmap-discovery 172.30.0.0/16 -->
+<nmaprun scanner="nmap" args="/usr/lib/nmap/nmap -&#45;privileged -sn -oA notes/week01/day1/nmap-discovery 172.30.0.0/16" start="1767506075" startstr="Sun Jan  4 00:54:35 2026" version="7.95" xmloutputversion="1.05">
+<verbose level="0"/>
+<debugging level="0"/>
+<host><status state="up" reason="arp-response" reason_ttl="0"/>
+<address addr="172.30.0.2" addrtype="ipv4"/>
+<address addr="02:42:AC:1E:00:02" addrtype="mac"/>
+<hostnames>
+</hostnames>
+<times srtt="38" rttvar="5000" to="100000"/>
+</host>
+<host><status state="up" reason="arp-response" reason_ttl="0"/>
+<address addr="172.30.0.3" addrtype="ipv4"/>
+<address addr="02:42:AC:1E:00:03" addrtype="mac"/>
+<hostnames>
+</hostnames>
+<times srtt="21" rttvar="5000" to="100000"/>
+</host>
+<host><status state="up" reason="arp-response" reason_ttl="0"/>
+<address addr="172.30.0.4" addrtype="ipv4"/>
+<address addr="02:42:AC:1E:00:04" addrtype="mac"/>
+<hostnames>
+</hostnames>
+<times srtt="24" rttvar="5000" to="100000"/>
+</host>
+<host><status state="up" reason="arp-response" reason_ttl="0"/>
+<address addr="172.30.0.5" addrtype="ipv4"/>
+<address addr="02:42:AC:1E:00:05" addrtype="mac"/>
+<hostnames>
+</hostnames>
+<times srtt="16" rttvar="5000" to="100000"/>
+</host>
+<host><status state="up" reason="arp-response" reason_ttl="0"/>
+<address addr="172.30.0.6" addrtype="ipv4"/>
+<address addr="02:42:AC:1E:00:06" addrtype="mac"/>
+<hostnames>
+</hostnames>
+<times srtt="77" rttvar="87" to="100000"/>
+</host>
+<host><status state="up" reason="arp-response" reason_ttl="0"/>
+<address addr="172.30.0.7" addrtype="ipv4"/>
+<address addr="02:42:AC:1E:00:07" addrtype="mac"/>
+<hostnames>
+</hostnames>
+<times srtt="33" rttvar="5000" to="100000"/>
+</host>
+<host><status state="up" reason="arp-response" reason_ttl="0"/>
+<address addr="172.30.0.8" addrtype="ipv4"/>
+<address addr="02:42:AC:1E:00:08" addrtype="mac"/>
+<hostnames>
+</hostnames>
+<times srtt="30" rttvar="5000" to="100000"/>
+</host>
+<host><status state="up" reason="arp-response" reason_ttl="0"/>
+<address addr="172.30.0.10" addrtype="ipv4"/>
+<address addr="02:42:AC:1E:00:0A" addrtype="mac"/>
+<hostnames>
+</hostnames>
+<times srtt="57" rttvar="49" to="100000"/>
+</host>
+<host><status state="up" reason="localhost-response" reason_ttl="0"/>
+<address addr="172.30.0.1" addrtype="ipv4"/>
+<hostnames>
+</hostnames>
+</host>
