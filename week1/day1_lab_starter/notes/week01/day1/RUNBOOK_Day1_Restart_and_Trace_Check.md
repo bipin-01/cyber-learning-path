@@ -52,4 +52,34 @@ curl -fsS http://localhost/health >/dev/null || true  # Caddy (if you wired a /h
 curl -sS "http://localhost:3100/loki/api/v1/labels" | jq .
 curl -sS "http://localhost:3100/loki/api/v1/label/job/values" | jq .
 ```
+### 3.2) Query recent streams
+```bash
+START=$(date -u -d '20 minutes ago' +%s%N); END=$(date -u +%s%N)
+
+# Count matching streams
+curl -sG "http://localhost:3100/loki/api/v1/query_range" \
+  --data-urlencode 'query={job="docker-logs"}' \
+  --data-urlencode "start=$START" --data-urlencode "end=$END" \
+  --data-urlencode 'limit=100' | jq '.data.result | length'
+
+# Peek the first stream’s labels (should show a service name)
+curl -sG "http://localhost:3100/loki/api/v1/query_range" \
+  --data-urlencode 'query={job="docker-logs"}' \
+  --data-urlencode "start=$START" --data-urlencode "end=$END" \
+  --data-urlencode 'limit=1' | jq '.data.result[0].stream'
+```
+
+### 3.3) Promtail metrics (sent vs dropped)
+```bash
+curl -sS http://localhost:9080/metrics | \
+  egrep -i 'promtail_sent_entries_total|promtail_dropped_entries_total' || true
+```
+
+## 4) Grafana quick check
+1. Open http://localhost:3000
+
+2. Ensure Loki data source points to http://loki:3100
+
+3. Explore → run {job="docker-logs"} and confirm you see logs from ≥3 services
+(e.g., reverse-proxy, loki, dvwa, vulnapi, grafana, keycloak).
 
