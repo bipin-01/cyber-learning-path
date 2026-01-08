@@ -1,0 +1,12 @@
+# reuse
+TARGETS=notes/week01/day1/targets.txt
+
+# if missing, re-scan the compose subnet and build it again:
+if [ ! -f "$TARGETS" ]; then
+  SUBNET=$(docker network inspect day1-lab_lab-net --format '{{(index .IPAM.Config 0).Subnet}}')
+  echo "Discovering live hosts in $SUBNET"
+  mkdir -p notes/week01/day1
+  nmap -sn "$SUBNET" -oA notes/week01/day1/nmap-discovery
+  awk '/Nmap scan report/{print $5}' notes/week01/day1/nmap-discovery.gnmap \
+    > notes/week01/day1/targets.txt
+fi
